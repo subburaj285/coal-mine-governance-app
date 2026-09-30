@@ -19,6 +19,7 @@ import { Violation } from '../types';
 export const ViolationsScreen: React.FC = () => {
   const { violations, addViolation, setActiveScreen } = useApp();
   const [activeTab, setActiveTab] = useState<'All' | 'Open' | 'High Risk' | 'Resolved'>('All');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const [selectedViolation, setSelectedViolation] = useState<Violation | null>(null);
   const [isLogModalOpen, setIsLogModalOpen] = useState(false);
@@ -33,10 +34,19 @@ export const ViolationsScreen: React.FC = () => {
   const [newPhoto, setNewPhoto] = useState('');
 
   const filteredViolations = violations.filter((v) => {
-    if (activeTab === 'Open') return v.status === 'Open' || v.status === 'Assigned' || v.status === 'Reopened';
-    if (activeTab === 'High Risk') return (v.severity === 'High' || v.severity === 'Critical') && v.status !== 'Closed';
-    if (activeTab === 'Resolved') return v.status === 'Completed' || v.status === 'Verified' || v.status === 'Closed';
-    return true;
+    const matchesTab =
+      activeTab === 'All' ||
+      (activeTab === 'Open' && (v.status === 'Open' || v.status === 'Assigned' || v.status === 'Reopened')) ||
+      (activeTab === 'High Risk' && (v.severity === 'High' || v.severity === 'Critical') && v.status !== 'Closed') ||
+      (activeTab === 'Resolved' && (v.status === 'Completed' || v.status === 'Verified' || v.status === 'Closed'));
+
+    const matchesSearch =
+      v.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      v.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      v.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      v.responsibleDepartment.toLowerCase().includes(searchQuery.toLowerCase());
+
+    return matchesTab && matchesSearch;
   });
 
   const handleCreateViolation = async () => {
@@ -77,6 +87,23 @@ export const ViolationsScreen: React.FC = () => {
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
+        {/* Search Bar */}
+        <View style={styles.searchBox}>
+          <Ionicons name="search-outline" size={18} color={Colors.textMuted} />
+          <TextInput
+            style={styles.searchInput}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            placeholder="Search field violations by title, location or dept..."
+            placeholderTextColor={Colors.textMuted}
+          />
+          {searchQuery !== '' && (
+            <TouchableOpacity onPress={() => setSearchQuery('')}>
+              <Ionicons name="close-circle" size={18} color={Colors.textMuted} />
+            </TouchableOpacity>
+          )}
+        </View>
+
         {/* Log New Incident Header Button */}
         <TouchableOpacity
           style={styles.logNewBtn}
@@ -91,7 +118,7 @@ export const ViolationsScreen: React.FC = () => {
           <View style={styles.emptyCard}>
             <Ionicons name="checkmark-circle-outline" size={40} color={Colors.success} />
             <Text style={styles.emptyTitle}>No Incidents Found</Text>
-            <Text style={styles.emptySub}>All safety & compliance criteria in this category are clear.</Text>
+            <Text style={styles.emptySub}>All safety & compliance criteria in this filter are clear.</Text>
           </View>
         ) : (
           filteredViolations.map((item) => (
@@ -321,7 +348,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   tabItemActive: {
-    backgroundColor: 'rgba(245, 158, 11, 0.15)',
+    backgroundColor: 'rgba(217, 119, 6, 0.15)',
   },
   tabText: {
     color: Colors.textMuted,
@@ -333,17 +360,34 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   scrollContent: {
-    padding: 16,
+    padding: 14,
     paddingBottom: 40,
+  },
+  searchBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.cardBg,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: Colors.inputBorder,
+    paddingHorizontal: 12,
+    height: 42,
+    gap: 8,
+    marginBottom: 10,
+  },
+  searchInput: {
+    flex: 1,
+    color: Colors.textPrimary,
+    fontSize: 13,
   },
   logNewBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: Colors.primary,
-    paddingVertical: 12,
+    paddingVertical: 11,
     borderRadius: 10,
-    marginBottom: 14,
+    marginBottom: 12,
     gap: 8,
   },
   logNewBtnText: {
@@ -375,8 +419,8 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: Colors.cardBg,
     borderRadius: 12,
-    padding: 14,
-    marginBottom: 12,
+    padding: 12,
+    marginBottom: 10,
     borderWidth: 1,
     borderColor: Colors.cardBorder,
   },
@@ -384,7 +428,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   catBadge: {
     backgroundColor: Colors.surfaceLight,
@@ -400,7 +444,7 @@ const styles = StyleSheet.create({
   },
   cardTitle: {
     color: Colors.textPrimary,
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '700',
   },
   cardLoc: {
@@ -412,7 +456,7 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     fontSize: 12,
     lineHeight: 16,
-    marginTop: 6,
+    marginTop: 4,
     marginBottom: 8,
   },
   thumbWrapper: {
@@ -447,7 +491,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderTopWidth: 1,
     borderTopColor: Colors.divider,
-    paddingTop: 8,
+    paddingTop: 6,
   },
   deptText: {
     color: Colors.textMuted,
@@ -459,7 +503,7 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.8)',
+    backgroundColor: 'rgba(15, 23, 42, 0.7)',
     justifyContent: 'center',
     padding: 16,
   },
@@ -535,11 +579,11 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   noteBox: {
-    backgroundColor: 'rgba(245, 158, 11, 0.1)',
+    backgroundColor: 'rgba(217, 119, 6, 0.1)',
     padding: 10,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: 'rgba(245, 158, 11, 0.3)',
+    borderColor: 'rgba(217, 119, 6, 0.3)',
     marginVertical: 8,
   },
   noteTitle: {
@@ -574,7 +618,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(245, 158, 11, 0.15)',
+    backgroundColor: 'rgba(217, 119, 6, 0.15)',
     paddingVertical: 12,
     borderRadius: 8,
     borderWidth: 1,
@@ -620,7 +664,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.inputBorder,
   },
   miniChipActive: {
-    backgroundColor: 'rgba(245, 158, 11, 0.2)',
+    backgroundColor: 'rgba(217, 119, 6, 0.2)',
     borderColor: Colors.primary,
   },
   miniChipText: {

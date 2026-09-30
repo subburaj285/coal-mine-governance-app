@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Modal } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '../context/AppContext';
 import { Colors } from '../theme/colors';
@@ -12,48 +12,46 @@ export const Header: React.FC = () => {
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
-  const roles: UserRole[] = [
-    'Supervisor',
-    'Safety Officer',
-    'Environment Officer',
-    'Production Officer',
-    'Maintenance Engineer',
+  const roles: { role: UserRole; icon: keyof typeof Ionicons.glyphMap; label: string }[] = [
+    { role: 'Supervisor', icon: 'people', label: 'Supervisor' },
+    { role: 'Safety Officer', icon: 'shield-checkmark', label: 'Safety' },
+    { role: 'Environment Officer', icon: 'leaf', label: 'Environment' },
+    { role: 'Production Officer', icon: 'bar-chart', label: 'Production' },
+    { role: 'Maintenance Engineer', icon: 'construct', label: 'Maintenance' },
   ];
 
   if (!currentUser || activeScreen === 'Login') return null;
 
+  // Time-based friendly greeting
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good Morning';
+    if (hour < 17) return 'Good Afternoon';
+    return 'Good Evening';
+  };
+
   return (
     <View style={styles.container}>
+      {/* User Header Row */}
       <View style={styles.topRow}>
         <View style={styles.userSection}>
           <TouchableOpacity
             style={styles.avatarCircle}
-            onPress={() => setRoleModalVisible(true)}
+            onPress={() => setActiveScreen('Profile')}
             activeOpacity={0.8}
           >
-            <Ionicons name="person-circle" size={38} color={Colors.primary} />
+            <Ionicons name="person-circle" size={40} color={Colors.primary} />
           </TouchableOpacity>
           <View style={styles.userInfo}>
+            <Text style={styles.greetingText}>{getGreeting()}, 👋</Text>
             <View style={styles.nameRow}>
               <Text style={styles.userName}>{currentUser.name}</Text>
               <StatusBadge label={activeRole} type="role" size="small" />
             </View>
-            <Text style={styles.mineText} numberOfLines={1}>
-              {currentUser.mineName} • <Text style={styles.shiftText}>{currentUser.shift}</Text>
-            </Text>
           </View>
         </View>
 
         <View style={styles.actionButtons}>
-          <TouchableOpacity
-            style={styles.demoSwitchBtn}
-            onPress={() => setRoleModalVisible(true)}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="swap-horizontal" size={16} color={Colors.primary} />
-            <Text style={styles.demoSwitchText}>Role</Text>
-          </TouchableOpacity>
-
           <TouchableOpacity
             style={styles.iconButton}
             onPress={() => setActiveScreen('Notifications')}
@@ -69,69 +67,44 @@ export const Header: React.FC = () => {
         </View>
       </View>
 
+      {/* 1-Tap Quick Role Switcher Scroll Bar */}
+      <View style={styles.roleBarWrapper}>
+        <Text style={styles.roleBarTitle}>QUICK ROLE SWITCH:</Text>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.roleScroll}
+        >
+          {roles.map((r) => {
+            const isSelected = r.role === activeRole;
+            return (
+              <TouchableOpacity
+                key={r.role}
+                style={[styles.quickRoleChip, isSelected && styles.quickRoleChipSelected]}
+                onPress={() => switchRole(r.role)}
+                activeOpacity={0.8}
+              >
+                <Ionicons
+                  name={r.icon}
+                  size={14}
+                  color={isSelected ? '#FFF' : Colors.textSecondary}
+                />
+                <Text style={[styles.quickRoleText, isSelected && styles.quickRoleTextSelected]}>
+                  {r.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+      </View>
+
       {/* AI Governance Live Banner */}
       <View style={styles.aiBanner}>
         <View style={styles.aiPulseDot} />
         <Text style={styles.aiBannerText} numberOfLines={1}>
-          AI GOVERNANCE ENGINE: <Text style={{ color: Colors.primary }}>Active Risk & DGMS Monitoring</Text>
+          AI GOVERNANCE ENGINE: <Text style={{ color: Colors.primary }}>Active DGMS Compliance System</Text>
         </Text>
       </View>
-
-      {/* Role Switcher Modal */}
-      <Modal visible={roleModalVisible} transparent animationType="fade">
-        <TouchableOpacity
-          style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={() => setRoleModalVisible(false)}
-        >
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Ionicons name="shield-checkmark" size={22} color={Colors.primary} />
-              <Text style={styles.modalTitle}>Select Demo Role</Text>
-              <TouchableOpacity onPress={() => setRoleModalVisible(false)}>
-                <Ionicons name="close" size={20} color={Colors.textMuted} />
-              </TouchableOpacity>
-            </View>
-            <Text style={styles.modalSubtext}>
-              Switch module views instantly for frontend demonstration:
-            </Text>
-
-            {roles.map((r) => {
-              const isSelected = r === activeRole;
-              return (
-                <TouchableOpacity
-                  key={r}
-                  style={[styles.roleOption, isSelected && styles.roleOptionSelected]}
-                  onPress={() => {
-                    switchRole(r);
-                    setRoleModalVisible(false);
-                  }}
-                >
-                  <Ionicons
-                    name={
-                      r === 'Supervisor'
-                        ? 'people'
-                        : r === 'Safety Officer'
-                        ? 'shield'
-                        : r === 'Environment Officer'
-                        ? 'leaf'
-                        : r === 'Production Officer'
-                        ? 'construct'
-                        : 'cog'
-                    }
-                    size={20}
-                    color={isSelected ? Colors.primary : Colors.textSecondary}
-                  />
-                  <Text style={[styles.roleOptionText, isSelected && styles.roleOptionTextSelected]}>
-                    {r}
-                  </Text>
-                  {isSelected && <Ionicons name="checkmark-circle" size={18} color={Colors.primary} />}
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        </TouchableOpacity>
-      </Modal>
     </View>
   );
 };
@@ -139,9 +112,9 @@ export const Header: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     backgroundColor: Colors.cardBg,
-    paddingTop: 36,
-    paddingHorizontal: 16,
-    paddingBottom: 10,
+    paddingTop: 32,
+    paddingHorizontal: 14,
+    paddingBottom: 8,
     borderBottomWidth: 1,
     borderBottomColor: Colors.cardBorder,
   },
@@ -149,6 +122,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: 8,
   },
   userSection: {
     flexDirection: 'row',
@@ -161,46 +135,26 @@ const styles = StyleSheet.create({
   userInfo: {
     flex: 1,
   },
+  greetingText: {
+    color: Colors.textMuted,
+    fontSize: 10,
+    fontWeight: '600',
+  },
   nameRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    marginBottom: 2,
+    marginTop: 1,
   },
   userName: {
     color: Colors.textPrimary,
     fontSize: 15,
     fontWeight: '800',
   },
-  mineText: {
-    color: Colors.textSecondary,
-    fontSize: 11,
-    fontWeight: '500',
-  },
-  shiftText: {
-    color: Colors.primary,
-    fontWeight: '700',
-  },
   actionButtons: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-  },
-  demoSwitchBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(217, 119, 6, 0.12)',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(217, 119, 6, 0.3)',
-    gap: 4,
-  },
-  demoSwitchText: {
-    color: Colors.primary,
-    fontSize: 12,
-    fontWeight: '800',
   },
   iconButton: {
     width: 36,
@@ -232,86 +186,66 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '800',
   },
+  roleBarWrapper: {
+    marginVertical: 4,
+  },
+  roleBarTitle: {
+    color: Colors.textMuted,
+    fontSize: 9,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+    marginBottom: 4,
+  },
+  roleScroll: {
+    flexDirection: 'row',
+    gap: 6,
+  },
+  quickRoleChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.surfaceLight,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: Colors.cardBorder,
+    gap: 5,
+  },
+  quickRoleChipSelected: {
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
+  },
+  quickRoleText: {
+    color: Colors.textSecondary,
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  quickRoleTextSelected: {
+    color: '#FFF',
+    fontWeight: '800',
+  },
   aiBanner: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Colors.surfaceLight,
-    marginTop: 8,
+    marginTop: 6,
     paddingHorizontal: 10,
-    paddingVertical: 5,
+    paddingVertical: 4,
     borderRadius: 6,
     borderWidth: 1,
     borderColor: 'rgba(217, 119, 6, 0.25)',
   },
   aiPulseDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 4,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
     backgroundColor: Colors.primary,
-    marginRight: 8,
+    marginRight: 6,
   },
   aiBannerText: {
     color: Colors.textSecondary,
     fontSize: 10,
     fontWeight: '700',
     letterSpacing: 0.5,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.65)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  modalContent: {
-    width: '100%',
-    maxWidth: 380,
-    backgroundColor: Colors.cardBg,
-    borderRadius: 16,
-    padding: 20,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 6,
-  },
-  modalTitle: {
-    color: Colors.textPrimary,
-    fontSize: 17,
-    fontWeight: '800',
-    flex: 1,
-    marginLeft: 8,
-  },
-  modalSubtext: {
-    color: Colors.textMuted,
-    fontSize: 12,
-    marginBottom: 14,
-  },
-  roleOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 12,
-    borderRadius: 10,
-    backgroundColor: Colors.surfaceLight,
-    marginBottom: 8,
-    gap: 12,
-  },
-  roleOptionSelected: {
-    backgroundColor: 'rgba(217, 119, 6, 0.12)',
-    borderWidth: 1,
-    borderColor: Colors.primary,
-  },
-  roleOptionText: {
-    color: Colors.textSecondary,
-    fontSize: 13,
-    fontWeight: '600',
-    flex: 1,
-  },
-  roleOptionTextSelected: {
-    color: Colors.primary,
-    fontWeight: '800',
   },
 });
