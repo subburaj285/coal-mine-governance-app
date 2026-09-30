@@ -25,7 +25,7 @@ import { ProfileScreen } from './screens/ProfileScreen';
 
 export const AppContent: React.FC = () => {
   const { activeScreen, activeRole, switchRole } = useApp();
-  const [isPhoneFrame, setIsPhoneFrame] = useState(true);
+  const [isTabletFrame, setIsTabletFrame] = useState(true);
 
   const renderScreen = () => {
     switch (activeScreen) {
@@ -99,12 +99,12 @@ export const AppContent: React.FC = () => {
         {/* Top Control Bar for Web Evaluator */}
         <View style={styles.topControlBar}>
           <View style={styles.brandTitleRow}>
-            <Ionicons name="hardware-chip" size={18} color={Colors.primary} />
-            <Text style={styles.controlBrandText}>MINE SHIELD AI - FIELD DEMO PORTAL</Text>
+            <Ionicons name="tablet-landscape-outline" size={20} color={Colors.primary} />
+            <Text style={styles.controlBrandText}>MINE SHIELD AI - FIELD TABLET PORTAL</Text>
           </View>
 
           <View style={styles.topRoleControls}>
-            <Text style={styles.controlLabel}>SWITCH DEMO ROLE:</Text>
+            <Text style={styles.controlLabel}>DEMO ROLE:</Text>
             {roles.map((r) => {
               const active = r === activeRole;
               return (
@@ -123,18 +123,18 @@ export const AppContent: React.FC = () => {
 
           <TouchableOpacity
             style={styles.toggleFrameBtn}
-            onPress={() => setIsPhoneFrame(!isPhoneFrame)}
+            onPress={() => setIsTabletFrame(!isTabletFrame)}
           >
-            <Ionicons name={isPhoneFrame ? 'expand-outline' : 'phone-portrait-outline'} size={16} color="#0F172A" />
+            <Ionicons name={isTabletFrame ? 'expand-outline' : 'tablet-portrait-outline'} size={16} color="#0F172A" />
             <Text style={styles.toggleFrameText}>
-              {isPhoneFrame ? 'FULL SCREEN' : 'PHONE FRAME'}
+              {isTabletFrame ? 'FULL SCREEN' : 'TABLET FRAME'}
             </Text>
           </TouchableOpacity>
         </View>
 
-        {isPhoneFrame ? (
-          <View style={styles.phoneFrame}>
-            <View style={styles.phoneNotch} />
+        {isTabletFrame ? (
+          <View style={styles.tabletFrame}>
+            <View style={styles.tabletCameraDot} />
             <View style={styles.phoneInner}>{content}</View>
             <View style={styles.phoneHomeIndicator} />
           </View>
@@ -226,46 +226,45 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '800',
   },
-  phoneFrame: {
+  tabletFrame: {
     width: '100%',
-    maxWidth: 380,
+    maxWidth: 768,
     height: '100%',
-    maxHeight: 920,
+    maxHeight: 940,
     backgroundColor: Colors.background,
-    borderRadius: Platform.OS === 'web' ? 42 : 0,
+    borderRadius: Platform.OS === 'web' ? 32 : 0,
     overflow: 'hidden',
-    borderWidth: Platform.OS === 'web' ? 10 : 0,
+    borderWidth: Platform.OS === 'web' ? 14 : 0,
     borderColor: '#0F172A',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 20 },
-    shadowOpacity: 0.3,
-    shadowRadius: 30,
+    shadowOffset: { width: 0, height: 24 },
+    shadowOpacity: 0.35,
+    shadowRadius: 36,
     position: 'relative',
     flex: 1,
   },
   fullScreenWrapper: {
     width: '100%',
-    maxWidth: 600,
+    maxWidth: 900,
     height: '100%',
     backgroundColor: Colors.background,
     flex: 1,
   },
-  phoneNotch: {
+  tabletCameraDot: {
     position: 'absolute',
-    top: 0,
+    top: 5,
     alignSelf: 'center',
-    width: 140,
-    height: 24,
-    backgroundColor: '#0F172A',
-    borderBottomLeftRadius: 12,
-    borderBottomRightRadius: 12,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#334155',
     zIndex: 9999,
   },
   phoneHomeIndicator: {
     position: 'absolute',
-    bottom: 6,
+    bottom: 4,
     alignSelf: 'center',
-    width: 120,
+    width: 140,
     height: 4,
     backgroundColor: '#CBD5E1',
     borderRadius: 2,
